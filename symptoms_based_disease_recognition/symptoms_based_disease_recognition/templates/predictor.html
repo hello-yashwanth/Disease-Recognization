@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% block title %}Predictor — SymptomAI{% endblock %}
+
+{% block content %}
+
+<div class="card">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center mb-4">
+    <div class="icon-wrapper me-3">
+      <i class="fas fa-stethoscope"></i>
+    </div>
+    <div>
+      <h2 class="mb-0">Disease Predictor</h2>
+      <p class="text-muted mb-0">
+        Enter patient symptoms with optional severity and duration
+      </p>
+    </div>
+  </div>
+
+
+  <!-- FORM -->
+  <form id="symptom-form">
+
+    <!-- Patient Name -->
+    <div class="mb-3">
+      <label for="patient-name" class="form-label">Patient Name</label>
+      <input
+        type="text"
+        class="form-control"
+        id="patient-name"
+        name="patient_name"
+        placeholder="Enter patient name (optional)"
+      />
+    </div>
+
+
+    <!-- Symptom List -->
+    <datalist id="symptoms-list">
+      {% for s in symptoms %}
+      <option value="{{ s }}"></option>
+      {% endfor %}
+    </datalist>
+
+
+    <div class="info-badge mb-4">
+      <i class="fas fa-info-circle"></i>
+      Showing {{ symptoms|length }} available symptoms
+    </div>
+
+
+    <!-- Dynamic Symptoms -->
+    <div id="symptom-list">
+
+      <div class="symptom-row d-flex gap-2 mb-3 align-items-center">
+
+        <div class="flex-grow-1">
+          <label class="form-label small text-muted mb-1">
+            Symptom Name
+          </label>
+
+          <input
+            name="symptom"
+            list="symptoms-list"
+            class="form-control"
+            placeholder="fever, headache, cough"
+          />
+        </div>
+
+
+        <div style="width:120px">
+          <label class="form-label small text-muted mb-1">
+            Severity (1-5)
+          </label>
+
+          <input
+            name="severity"
+            class="form-control"
+            type="number"
+            min="1"
+            max="5"
+          />
+        </div>
+
+
+        <div style="width:140px">
+          <label class="form-label small text-muted mb-1">
+            Duration (days)
+          </label>
+
+          <input
+            name="duration"
+            class="form-control"
+            type="number"
+            min="1"
+          />
+        </div>
+
+
+        <div class="d-flex align-items-end" style="height:58px">
+          <button
+            class="btn btn-outline-danger remove"
+            type="button"
+            title="Remove symptom"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- Buttons -->
+    <div class="d-flex gap-2 mt-4">
+
+      <button
+        id="add-symptom"
+        class="btn btn-outline-primary"
+        type="button"
+      >
+        <i class="fas fa-plus"></i>
+        Add Symptom
+      </button>
+
+      <button
+        id="submit"
+        class="btn btn-primary flex-grow-1"
+        type="submit"
+      >
+        <i class="fas fa-brain"></i>
+        Analyze & Predict
+      </button>
+
+    </div>
+
+  </form>
+
+
+  <!-- RESULTS -->
+  <section id="result" class="mt-4 d-none">
+
+    <div class="result-header mb-4">
+      <h4>
+        <i class="fas fa-chart-line"></i>
+        Prediction Results
+      </h4>
+    </div>
+
+
+    <!-- Prediction -->
+    <div id="prediction" class="prediction-card"></div>
+
+    <!-- Download -->
+    <div class="d-flex justify-content-end mt-3">
+      <a id="download-report"
+         class="btn btn-outline-success d-none"
+         href="#"
+         download>
+        <i class="fas fa-download me-2"></i>Download Report
+      </a>
+    </div>
+
+
+    <div class="row mt-4">
+
+      <!-- Top Symptoms -->
+      <div class="col-md-6 mb-3">
+
+        <h5>
+          <i class="fas fa-list"></i>
+          Top Contributing Symptoms
+        </h5>
+
+        <ul id="top-features"></ul>
+
+      </div>
+
+
+      <!-- Tests -->
+      <div class="col-md-6 mb-3">
+
+        <h5>
+          <i class="fas fa-flask"></i>
+          Recommended Tests
+        </h5>
+
+        <ul id="tests"></ul>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</div>
+
+
+<!-- Simple styling -->
+<style>
+
+.icon-wrapper{
+  width:60px;
+  height:60px;
+  background:#f02f34;
+  color:white;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.6rem;
+}
+
+.info-badge{
+  padding:10px;
+  background:#fff4f4;
+  border:1px solid #f02f34;
+  border-radius:10px;
+}
+
+.prediction-card{
+  font-size:1.5rem;
+  font-weight:600;
+  padding:15px;
+  background:#fff4f4;
+  border-left:4px solid #f02f34;
+}
+
+.result-header{
+  border-bottom:2px solid #eee;
+  padding-bottom:10px;
+}
+
+</style>
+
+{% endblock %}

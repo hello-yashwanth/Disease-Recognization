@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Prediction History — SymptomAI{% endblock %}
+{% block content %}
+<div class="card">
+  <h2 class="mb-4">Prediction History</h2>
+  {% if history %}
+  <table class="table table-bordered table-hover">
+    <thead>
+      <tr>
+        <th>Report ID</th>
+        <th>Date</th>
+        <th>Patient Name</th>
+        <th>Predicted Disease</th>
+        <th>Recommended Tests</th>
+        <th>Download</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for rec in history %}
+      <tr>
+        <td>{{ rec.report_id }}</td>
+        <td>{{ rec.prediction_date }}</td>
+        <td>{{ rec.patient_name }}</td>
+        <td>{{ rec.predicted_disease }}</td>
+        <td>{{ rec.recommended_tests }}</td>
+        <td><a href="{{ url_for('download_report', report_id=rec.report_id) }}" class="btn btn-sm btn-primary">PDF</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="alert alert-info">No prediction history found.</div>
+  {% endif %}
+</div>
+{% endblock %}

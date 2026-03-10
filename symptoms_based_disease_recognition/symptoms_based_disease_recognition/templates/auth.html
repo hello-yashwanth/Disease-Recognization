@@ -1,0 +1,412 @@
+{% extends 'base.html' %}
+{% block title %}Login — SymptomAI{% endblock %}
+{% block content %}
+<div class="auth-container">
+  <div class="auth-card">
+    <!-- Login Form -->
+    <div id="login-form" class="auth-form active">
+      <h2 class="auth-title">Login</h2>
+      <p class="auth-subtitle">Access your account</p>
+      
+      <form id="loginForm" class="form-group">
+        <div class="mb-3">
+          <label for="login-username" class="form-label">Username</label>
+          <input type="text" class="form-control" id="login-username" name="username" required>
+        </div>
+        
+        <div class="mb-3">
+          <label for="login-password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="login-password" name="password" required>
+        </div>
+        
+        <div id="login-error" class="alert alert-danger" style="display: none;"></div>
+        
+        <button type="submit" class="btn btn-primary w-100 mb-3">Login</button>
+      </form>
+      
+      <p class="text-center mb-0">
+        Don't have an account? 
+        <button type="button" class="btn-link-text" onclick="toggleForms()">Sign Up</button>
+      </p>
+    </div>
+
+    <!-- Signup Form -->
+    <div id="signup-form" class="auth-form">
+      <h2 class="auth-title">Sign Up</h2>
+      <p class="auth-subtitle">Create a new account</p>
+      
+      <form id="signupForm" class="form-group">
+        <div class="mb-3">
+          <label for="signup-username" class="form-label">Username</label>
+          <input type="text" class="form-control" id="signup-username" name="username" required>
+        </div>
+        
+        <div class="mb-3">
+          <label for="signup-email" class="form-label">Email</label>
+          <input type="email" class="form-control" id="signup-email" name="email" required>
+        </div>
+        
+        <div class="mb-3">
+          <label for="signup-password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="signup-password" name="password" required>
+        </div>
+        
+        <div class="mb-3">
+          <label for="signup-password-confirm" class="form-label">Confirm Password</label>
+          <input type="password" class="form-control" id="signup-password-confirm" name="password_confirm" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="signup-role" class="form-label">Role</label>
+          <select class="form-control" id="signup-role" name="role" required>
+            <option value="user" selected>User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        
+        <div id="signup-error" class="alert alert-danger" style="display: none;"></div>
+        <div id="signup-success" class="alert alert-success" style="display: none;"></div>
+        
+        <button type="submit" class="btn btn-success w-100 mb-3">Sign Up</button>
+      </form>
+      
+      <p class="text-center mb-0">
+        Already have an account? 
+        <button type="button" class="btn-link-text" onclick="toggleForms()">Login</button>
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 300px);
+  padding: 3rem 1rem;
+  position: relative;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 480px;
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  padding: 3rem;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--border-light);
+}
+
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: var(--gradient-primary);
+}
+
+.auth-form {
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+  width: 100%;
+  max-width: 480px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(20px);
+  pointer-events: none;
+}
+
+.auth-form.active {
+  opacity: 1;
+  visibility: visible;
+  position: relative;
+  transform: translateX(0);
+  pointer-events: all;
+}
+
+.auth-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.auth-subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  font-size: 1rem;
+}
+
+.form-label {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.625rem;
+  font-size: 0.95rem;
+  display: block;
+}
+
+.form-control {
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 0.875rem 1.125rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  width: 100%;
+  background: #ffffff;
+}
+
+.form-control:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(240, 47, 52, 0.1);
+  outline: none;
+}
+
+.form-control::placeholder {
+  color: var(--text-light);
+  opacity: 0.7;
+}
+
+.btn-primary, .btn-success {
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: 0 4px 15px rgba(240, 47, 52, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(240, 47, 52, 0.5);
+  background: var(--primary-hover);
+  color: white;
+}
+
+.btn-success {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: 0 4px 15px rgba(240, 47, 52, 0.4);
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(240, 47, 52, 0.5);
+  background: var(--primary-hover);
+  color: white;
+}
+
+.btn-link-text {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.btn-link-text::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.btn-link-text:hover {
+  color: var(--accent-hover);
+  text-decoration: none;
+}
+
+.btn-link-text:hover::after {
+  width: 100%;
+}
+
+.text-center {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-top: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.alert {
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  animation: fadeIn 0.3s ease;
+  border: 2px solid;
+}
+
+.alert-danger {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #dc2626;
+}
+
+.alert-success {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #059669;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group:last-of-type {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .auth-container {
+    padding: 2rem 1rem;
+    min-height: calc(100vh - 250px);
+  }
+  
+  .auth-card {
+    padding: 2rem 1.5rem;
+    border-radius: 20px;
+  }
+  
+  .auth-title {
+    font-size: 1.75rem;
+  }
+  
+  .auth-subtitle {
+    font-size: 0.95rem;
+  }
+}
+</style>
+
+<script>
+function toggleForms() {
+  const loginForm = document.getElementById('login-form');
+  const signupForm = document.getElementById('signup-form');
+
+  loginForm.classList.toggle('active');
+  signupForm.classList.toggle('active');
+
+  document.getElementById('loginForm').reset();
+  document.getElementById('signupForm').reset();
+
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('signup-error').style.display = 'none';
+  document.getElementById('signup-success').style.display = 'none';
+}
+
+
+/* ================= LOGIN ================= */
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const username = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
+  const errorDiv = document.getElementById('login-error');
+
+  errorDiv.style.display = "none";
+
+  try {
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await response.json();
+if (data.success) {
+
+  localStorage.setItem("user", JSON.stringify(data.user));
+
+  window.location.href = "/";
+}
+else {
+      errorDiv.textContent = data.message || "Login failed";
+      errorDiv.style.display = "block";
+    }
+
+  } catch (err) {
+    errorDiv.textContent = "Server error. Please try again.";
+    errorDiv.style.display = "block";
+  }
+});
+
+
+/* ================= SIGNUP ================= */
+
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const username = document.getElementById('signup-username').value;
+  const email = document.getElementById('signup-email').value;
+  const password = document.getElementById('signup-password').value;
+  const confirm = document.getElementById('signup-password-confirm').value;
+  const role = document.getElementById('signup-role').value;
+
+  const errorDiv = document.getElementById('signup-error');
+  const successDiv = document.getElementById('signup-success');
+
+  errorDiv.style.display = "none";
+  successDiv.style.display = "none";
+
+  if (password !== confirm) {
+    errorDiv.textContent = "Passwords do not match";
+    errorDiv.style.display = "block";
+    return;
+  }
+
+  try {
+
+    const response = await fetch('/api/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password, role })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+
+      successDiv.textContent = "Account created successfully. Please login.";
+      successDiv.style.display = "block";
+
+      document.getElementById('signupForm').reset();
+
+      setTimeout(() => {
+        toggleForms();
+      }, 1500);
+
+    } else {
+      errorDiv.textContent = data.message || "Signup failed";
+      errorDiv.style.display = "block";
+    }
+
+  } catch (err) {
+    errorDiv.textContent = "Server error. Please try again.";
+    errorDiv.style.display = "block";
+  }
+
+});
+</script>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Edit Disease{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Edit Disease</h2>
+  <form method="post">
+    <div class="mb-3">
+      <label for="disease-name" class="form-label">Disease Name</label>
+      <input
+        type="text"
+        class="form-control"
+        id="disease-name"
+        name="disease_name"
+        value="{{ disease['name'] }}"
+        required
+      />
+    </div>
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea
+        class="form-control"
+        id="description"
+        name="description"
+        rows="3"
+      >{{ disease['description'] or '' }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label for="severity" class="form-label">Overall Severity (1-5, optional)</label>
+      <input
+        type="number"
+        min="1"
+        max="5"
+        class="form-control"
+        id="severity"
+        name="severity"
+        value="{{ disease['severity'] if disease['severity'] is not none else '' }}"
+      />
+    </div>
+    <div class="mb-3">
+      <label for="duration_days" class="form-label">Typical Duration (days, optional)</label>
+      <input
+        type="number"
+        min="1"
+        class="form-control"
+        id="duration_days"
+        name="duration_days"
+        value="{{ disease['avg_duration_days'] if disease['avg_duration_days'] is not none else '' }}"
+      />
+    </div>
+    <button type="submit" class="btn btn-primary me-2">Save Changes</button>
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>
+{% endblock %}
+

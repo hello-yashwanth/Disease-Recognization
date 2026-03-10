@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+{% block title %}Login — SymptomAI{% endblock %}
+{% block content %}
+<div class="auth-container">
+  <div class="auth-card">
+    <!-- Login Form -->
+    <div id="login-form" class="auth-form active">
+      <h2 class="auth-title">Login</h2>
+      <p class="auth-subtitle">Access your account</p>
+      
+      <form id="loginForm" class="form-group">
+        <div class="mb-3">
+          <label for="login-username" class="form-label">Username</label>
+          <input type="text" class="form-control" id="login-username" name="username" required>
+        </div>
+        
+        <div class="mb-3">
+          <label for="login-password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="login-password" name="password" required>
+        </div>
+        
+        <div id="login-error" class="alert alert-danger" style="display: none;"></div>
+        
+        <button type="submit" class="btn btn-primary w-100 mb-3">Login</button>
+      </form>
+      
+      <p class="text-center mb-0">
+        Don't have an account? 
+        <button type="button" class="btn-link-text" onclick="toggleForms()">Sign Up</button>
+      </p>
+    </div>
+
+    <!-- Signup Form -->
+    <div id="signup-form" class="auth-form">
+      <h2 class="auth-title">Sign Up</h2>
+      <p class="auth-subtitle">Create a new account</p>
+      
+      <form id="signupForm" class="form-group">
+        <div class="mb-3">
+          <label for="signup-username" class="form-label">Username</label>
+          <input type="text" class="form-control" id="signup-username" name="username" required>
+        </div>
+        
+        <div class="mb-3">
+          <label for="signup-email" class="form-label">Email</label>
+          <input type="email" class="form-control" id="signup-email" name="email" required>
+        </div>
+        
+        <div class="mb-3">
+          <label for="signup-password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="signup-password" name="password" required>
+        </div>
+        
+        <div class="mb-3">
+          <label for="signup-password-confirm" class="form-label">Confirm Password</label>
+          <input type="password" class="form-control" id="signup-password-confirm" name="password_confirm" required>
+        </div>
+        
+        <div id="signup-error" class="alert alert-danger" style="display: none;"></div>
+        <div id="signup-success" class="alert alert-success" style="display: none;"></div>
+        
+        <button type="submit" class="btn btn-success w-100 mb-3">Sign Up</button>
+      </form>
+      
+      <p class="text-center mb-0">
+        Already have an account? 
+        <button type="button" class="btn-link-text" onclick="toggleForms()">Login</button>
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 70vh;
+  padding: 2rem 1rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 450px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  position: relative;
+}
+
+.auth-form {
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+  width: 100%;
+  max-width: 450px;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.auth-form.active {
+  opacity: 1;
+  visibility: visible;
+  position: relative;
+}
+
+.auth-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a2332;
+  margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.form-control {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btn-primary, .btn-success {
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-success {
+  background-color: #10b981;
+}
+
+.btn-success:hover {
+  background-color: #059669;
+}
+
+.btn-link-text {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.btn-link-text:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.text-center {
+  text-align: center;
+  color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .auth-card {
+    padding: 1.5rem;
+  }
+  
+  .auth-title {
+    font-size: 1.5rem;
+  }
+}
+</style>
+
+<script>
+function toggleForms() {
+  const loginForm = document.getElementById('login-form');
+  const signupForm = document.getElementById('signup-form');
+  
+  loginForm.classList.toggle('active');
+  signupForm.classList.toggle('active');
+  
+  // Clear forms
+  document.getElementById('loginForm').reset();
+  document.getElementById('signupForm').reset();
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('signup-error').style.display = 'none';
+  document.getElementById('signup-success').style.display = 'none';
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const username = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
+  const errorDiv = document.getElementById('login-error');
+  
+  try {
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username, password })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      // Redirect to dashboard or home
+      window.location.href = '/dashboard';
+    } else {
+      errorDiv.textContent = data.message;
+      errorDiv.style.display = 'block';
+    }
+  } catch (error) {
+    errorDiv.textContent = 'An error occurred. Please try again.';
+    errorDiv.style.display = 'block';
+  }
+});
+
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const username = document.getElementById('signup-username').value;
+  const email = document.getElementById('signup-email').value;
+  const password = document.getElementById('signup-password').value;
+  const passwordConfirm = document.getElementById('signup-password-confirm').value;
+  const errorDiv = document.getElementById('signup-error');
+  const successDiv = document.getElementById('signup-success');
+  
+  // Reset messages
+  errorDiv.style.display = 'none';
+  successDiv.style.display = 'none';
+  
+  // Validate passwords match
+  if (password !== passwordConfirm) {
+    errorDiv.textContent = 'Passwords do not match';
+    errorDiv.style.display = 'block';
+    return;
+  }
+  
+  // Validate password length
+  if (password.length < 6) {
+    errorDiv.textContent = 'Password must be at least 6 characters';
+    errorDiv.style.display = 'block';
+    return;
+  }
+  
+  try {
+    const response = await fetch('/api/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username, email, password })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      successDiv.textContent = 'Account created successfully! Please login.';
+      successDiv.style.display = 'block';
+      document.getElementById('signupForm').reset();
+      
+      // Switch to login form after 2 seconds
+      setTimeout(() => {
+        toggleForms();
+      }, 2000);
+    } else {
+      errorDiv.textContent = data.message;
+      errorDiv.style.display = 'block';
+    }
+  } catch (error) {
+    errorDiv.textContent = 'An error occurred. Please try again.';
+    errorDiv.style.display = 'block';
+  }
+});
+</script>
+{% endblock %}

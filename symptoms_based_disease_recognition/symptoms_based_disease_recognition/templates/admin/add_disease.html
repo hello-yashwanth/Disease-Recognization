@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Add New Disease{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Add New Disease</h2>
+  <form method="post">
+    <div class="mb-3">
+      <label for="disease-name" class="form-label">Disease Name</label>
+      <input type="text" class="form-control" id="disease-name" name="disease_name" required />
+    </div>
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+    </div>
+    <div class="mb-3">
+      <label for="symptoms" class="form-label">Symptoms (comma separated)</label>
+      <input type="text" class="form-control" id="symptoms" name="symptoms" placeholder="e.g. fever, cough, headache" required />
+    </div>
+    <div class="mb-3">
+      <label for="severity" class="form-label">Overall Severity (1-5, optional)</label>
+      <input type="number" min="1" max="5" class="form-control" id="severity" name="severity" placeholder="e.g. 3" />
+    </div>
+    <div class="mb-3">
+      <label for="duration_days" class="form-label">Typical Duration (days, optional)</label>
+      <input type="number" min="1" class="form-control" id="duration_days" name="duration_days" placeholder="e.g. 7" />
+    </div>
+    <button type="submit" class="btn btn-primary">Add Disease</button>
+  </form>
+</div>
+{% endblock %}

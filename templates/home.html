@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% block title %}Home — SymptomAI{% endblock %}
+{% block content %}
+<div class="hero-section">
+  <div class="hero-background"></div>
+  <div class="hero-overlay"></div>
+  <div class="container">
+    <div class="row align-items-center min-vh-50">
+      <div class="col-lg-6 mb-5 mb-lg-0 hero-content">
+        <h1 class="display-5 mb-4">Predict Diseases from Symptoms</h1>
+        <p class="lead">Interactive symptom-based disease recognition with explainability and dynamic test recommendations powered by advanced machine learning.</p>
+        <div class="d-flex flex-wrap gap-3 my-4">
+          {% if current_user.is_authenticated %}
+          <a class="btn btn-primary btn-lg" href="/predictor">
+            Try Model
+          </a>
+          {% else %}
+          <a class="btn btn-primary btn-lg" href="/auth">
+            Login
+          </a>
+          <a class="btn btn-outline-light btn-lg" href="/about">
+            Learn More
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.hero-section {
+  position: relative;
+  overflow: hidden;
+  margin: -5rem calc(-50vw + 50%) 0 calc(-50vw + 50%);
+  padding: 4rem 2rem;
+  width: 100vw;
+}
+
+.hero-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('{{ url_for("static", filename="img/doctor-background-dcdd0zwjfb1hqf0e.jpg") }}') center/cover no-repeat;
+  z-index: 0;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at top right, rgba(59, 130, 246, 0.3) 0%, rgba(30, 58, 138, 0.5) 100%);
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  color: #ffffff;
+}
+
+.hero-content h1 {
+  color: #ffffff;
+  font-weight: 800;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.hero-content .lead {
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+.hero-content h5 {
+  color: #ffffff;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.min-vh-50 {
+  min-height: 100vh;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+}
+
+.feature-list li {
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  border-left: 3px solid rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  color: #ffffff;
+  backdrop-filter: blur(10px);
+}
+
+.feature-list li:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateX(5px);
+  border-left-color: #ffffff;
+}
+
+.hero-image-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  z-index: 2;
+}
+
+.doctor-image {
+  max-height: 500px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 30px rgba(255, 255, 255, 0.3));
+  animation: float 6s ease-in-out infinite;
+  z-index: 1;
+  position: relative;
+}
+
+.fallback-image {
+  z-index: 0;
+}
+
+.floating-elements {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.floating-icon {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 1.25rem;
+  animation: floatIcon 4s ease-in-out infinite;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+@keyframes floatIcon {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-15px) rotate(5deg);
+    opacity: 1;
+  }
+}
+
+/* Doctor Image Styling */
+.doctor-image {
+  max-width: 100%;
+  height: auto;
+  transition: transform 0.3s ease;
+}
+
+.doctor-image:hover {
+  transform: scale(1.02);
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    margin: -5rem -1rem 3rem -1rem;
+    padding: 3rem 1rem;
+  }
+
+  .doctor-image {
+    max-height: 350px;
+  }
+  
+  .hero-image-wrapper {
+    min-height: 300px;
+  }
+
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+}
+</style>
+{% endblock %}

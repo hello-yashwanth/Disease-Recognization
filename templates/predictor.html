@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block title %}Predictor — SymptomAI{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="d-flex align-items-center mb-4">
+    <div class="icon-wrapper me-3">
+      <i class="fas fa-stethoscope"></i>
+    </div>
+    <div>
+      <h2 class="mb-0">Disease Predictor</h2>
+      <p class="text-muted mb-0">Enter patient symptoms with optional severity and duration</p>
+    </div>
+  </div>
+
+  <form id="symptom-form">
+    <datalist id="symptoms-list">
+      {% for s in symptoms %}
+      <option value="{{ s }}"></option>
+      {% endfor %}
+    </datalist>
+    
+    <div class="info-badge mb-4">
+      <i class="fas fa-info-circle me-2"></i>
+      <span>Showing {{ symptoms|length }} available symptoms</span>
+    </div>
+
+    <div id="symptom-list">
+      <div class="symptom-row d-flex gap-2 mb-3 align-items-center">
+        <div class="flex-grow-1">
+          <label class="form-label small text-muted mb-1">
+            <i class="fas fa-search me-1"></i>Symptom Name
+          </label>
+          <input name="symptom" list="symptoms-list" class="form-control" placeholder="e.g., fever, headache, cough" />
+        </div>
+        <div style="width: 120px;">
+          <label class="form-label small text-muted mb-1">
+            <i class="fas fa-exclamation-triangle me-1"></i>Severity (1-5)
+          </label>
+          <input name="severity" class="form-control" type="number" min="1" max="5" placeholder="1-5" />
+        </div>
+        <div style="width: 140px;">
+          <label class="form-label small text-muted mb-1">
+            <i class="fas fa-calendar-alt me-1"></i>Duration (days)
+          </label>
+          <input name="duration" class="form-control" type="number" min="1" placeholder="Days" />
+        </div>
+        <div class="d-flex align-items-end" style="height: 58px;">
+          <button class="btn btn-outline-danger remove" type="button" title="Remove symptom">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+      <button id="add-symptom" class="btn btn-outline-primary" type="button">
+        <i class="fas fa-plus me-2"></i>Add Symptom
+      </button>
+      <button id="submit" class="btn btn-primary flex-grow-1" type="submit">
+        <i class="fas fa-brain me-2"></i>Analyze & Predict
+      </button>
+    </div>
+  </form>
+
+  <section id="result" class="mt-4 d-none">
+    <div class="result-header mb-4">
+      <h4 class="mb-0">
+        <i class="fas fa-chart-line me-2" style="color: var(--accent);"></i>
+        Prediction Results
+      </h4>
+    </div>
+    
+    <div id="prediction" class="prediction-card"></div>
+    
+    <div class="row mt-4">
+      <div class="col-md-6 mb-3">
+        <h5 class="mb-3">
+          <i class="fas fa-list-ul me-2" style="color: var(--accent);"></i>
+          Top Contributing Symptoms
+        </h5>
+        <ul id="top-features"></ul>
+      </div>
+      <div class="col-md-6 mb-3">
+        <h5 class="mb-3">
+          <i class="fas fa-flask me-2" style="color: var(--accent);"></i>
+          Recommended Tests
+        </h5>
+        <ul id="tests"></ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<style>
+.icon-wrapper {
+  width: 60px;
+  height: 60px;
+  background: var(--accent);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 15px rgba(240, 47, 52, 0.4);
+}
+
+.info-badge {
+  background: rgba(240, 47, 52, 0.1);
+  border: 1px solid rgba(240, 47, 52, 0.3);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.prediction-card {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  padding: 1.5rem;
+  background: rgba(240, 47, 52, 0.1);
+  border-radius: 12px;
+  border-left: 4px solid var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.prediction-card::before {
+  content: "🎯";
+  font-size: 2rem;
+}
+
+.result-header {
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border);
+}
+
+.form-label {
+  font-weight: 500;
+  display: block;
+}
+</style>
+{% endblock %}

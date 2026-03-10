@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+{% block title %}Home — SymptomAI{% endblock %}
+{% block content %}
+<div class="homepage-wrapper">
+  <div class="hero-background-extended"></div>
+  <div class="hero-overlay-extended"></div>
+  <div class="hero-section">
+    <div class="container">
+      <div class="row align-items-center min-vh-50">
+        <div class="col-lg-6 mb-5 mb-lg-0 hero-content">
+          <h1 class="display-5 mb-4">Predict Diseases from Symptoms</h1>
+          <p class="lead">Interactive symptom-based disease recognition with explainability and dynamic test recommendations powered by advanced machine learning.</p>
+          <div class="d-flex flex-wrap gap-3 my-4">
+            {% if current_user.is_authenticated %}
+            <a class="btn btn-primary btn-lg" href="/predictor">
+              Try Model
+            </a>
+            {% else %}
+            <a class="btn btn-primary btn-lg" href="/auth">
+              Login
+            </a>
+            <a class="btn btn-outline-light btn-lg" href="/about">
+              Learn More
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.homepage-wrapper {
+  position: relative;
+  min-height: calc(100vh - 200px);
+  margin: -5rem calc(-50vw + 50%) 0 calc(-50vw + 50%);
+  width: 100vw;
+  overflow: visible;
+  margin-bottom: 0;
+}
+
+.hero-background-extended {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('{{ url_for("static", filename="img/doctor-background-dcdd0zwjfb1hqf0e.jpg") }}') center/cover no-repeat;
+  z-index: -2;
+  animation: backgroundZoom 20s ease-in-out infinite alternate;
+}
+
+.hero-overlay-extended {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(240, 47, 52, 0.4) 0%, rgba(30, 58, 138, 0.6) 100%);
+  z-index: -1;
+}
+
+.hero-section {
+  position: relative;
+  padding: 6rem 2rem;
+  min-height: calc(100vh - 200px);
+  display: flex;
+  align-items: center;
+  z-index: 2;
+}
+
+@keyframes backgroundZoom {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.05);
+  }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  color: #ffffff;
+  animation: fadeInUp 1s ease;
+  max-width: 700px;
+}
+
+.hero-content h1 {
+  color: #ffffff;
+  font-weight: 800;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.hero-content .lead {
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  font-size: 1.35rem;
+  line-height: 1.7;
+  margin-bottom: 2.5rem;
+}
+
+.hero-content h5 {
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.min-vh-50 {
+  min-height: 85vh;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0;
+}
+
+.feature-list li {
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  border-left: 4px solid rgba(255, 255, 255, 0.9);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #ffffff;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+}
+
+.feature-list li:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateX(8px);
+  border-left-color: #ffffff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.hero-image-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  z-index: 2;
+}
+
+.doctor-image {
+  max-height: 500px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 15px 40px rgba(255, 255, 255, 0.3));
+  animation: float 6s ease-in-out infinite;
+  z-index: 1;
+  position: relative;
+}
+
+.fallback-image {
+  z-index: 0;
+}
+
+.floating-elements {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.floating-icon {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 1.5rem;
+  animation: floatIcon 4s ease-in-out infinite;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes floatIcon {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-20px) rotate(5deg);
+    opacity: 1;
+  }
+}
+
+.doctor-image {
+  max-width: 100%;
+  height: auto;
+  transition: transform 0.3s ease;
+}
+
+.doctor-image:hover {
+  transform: scale(1.05);
+}
+
+.btn-outline-light {
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.btn-outline-light:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: white;
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 992px) {
+  .homepage-wrapper {
+    min-height: calc(100vh - 180px);
+  }
+  
+  .hero-section {
+    padding: 5rem 2rem;
+    min-height: calc(100vh - 180px);
+  }
+  
+  .hero-content .lead {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .homepage-wrapper {
+    margin: -5rem -1rem 0 -1rem;
+    min-height: calc(100vh - 160px);
+  }
+  
+  .hero-section {
+    padding: 4rem 1rem;
+    min-height: calc(100vh - 160px);
+  }
+
+  .doctor-image {
+    max-height: 350px;
+  }
+  
+  .hero-image-wrapper {
+    min-height: 300px;
+  }
+
+  .hero-content h1 {
+    font-size: 2.25rem;
+  }
+  
+  .hero-content .lead {
+    font-size: 1.1rem;
+  }
+  
+  .min-vh-50 {
+    min-height: auto;
+    padding: 2rem 0;
+  }
+  
+  .feature-list li {
+    padding: 1rem 1.25rem;
+    font-size: 0.95rem;
+  }
+}
+</style>
+{% endblock %}
