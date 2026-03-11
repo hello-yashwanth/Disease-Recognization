@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Contact{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+<h2 class="text-center mb-4">Contact Us</h2>
+
+<div class="contact-box">
+
+<form id="contactForm">
+
+<input type="text" id="name" class="form-control mb-3" placeholder="Your Name" required>
+
+<input type="email" id="email" class="form-control mb-3" placeholder="Your Email" required>
+
+<textarea id="message" class="form-control mb-3" placeholder="Your Message" rows="4" required></textarea>
+
+<button type="submit" class="btn btn-danger w-100">Submit</button>
+
+</form>
+
+</div>
+
+</div>
+
+<style>
+
+.contact-box{
+max-width:600px;
+margin:auto;
+padding:30px;
+background:white;
+border-radius:12px;
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
+}
+
+</style>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+document.getElementById("contactForm").addEventListener("submit", async function(e){
+
+e.preventDefault()
+
+const name=document.getElementById("name").value
+const email=document.getElementById("email").value
+const message=document.getElementById("message").value
+
+const res=await fetch("/api/contact",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+name,
+email,
+message
+})
+})
+
+const data=await res.json()
+
+if(data.success){
+
+alert("Submitted Successfully!")
+
+document.getElementById("contactForm").reset()
+
+}else{
+
+alert("Submission Failed")
+
+}
+
+})
+
+})
+
+</script>
+
+{% endblock %}

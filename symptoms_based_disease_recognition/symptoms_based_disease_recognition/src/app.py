@@ -4,12 +4,16 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 import uuid
+from database import db
 from datetime import datetime
 import json
 import re
 # Load environment variables
+
 load_dotenv()
 
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 try:
     from .predict import predict_from_input
     from .database import db
@@ -28,6 +32,7 @@ static_dir = os.path.join(base_dir, 'static')
 
 app = Flask(__name__, static_folder=static_dir, template_folder=template_dir)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key')
+db.init_db()
 
 # Register admin blueprint (admin panel at /admin)
 app.register_blueprint(admin_bp)
@@ -74,7 +79,29 @@ def inject_current_year():
 # =============================
 # Page Routes
 # =============================
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
 
+@app.route('/api/contact', methods=['POST'])
+def api_contact():
+
+    data = request.get_json()
+
+    name = data.get("name")
+    email = data.get("email")
+    message = data.get("message")
+
+    if not name or not email or not message:
+        return jsonify({"success": False, "message": "All fields required"}), 400
+
+    success = db.save_contact_message(name, email, message)
+
+    if success:
+        return jsonify({"success": True})
+    else:
+        return jsonify({"success": False, "message": "Database error"}), 500
+    
 @app.route('/')
 def home():
     return render_template('home.html')
@@ -120,7 +147,7 @@ def api_signup():
     username = data.get('username','').strip()
     email = data.get('email','').strip()
     password = data.get('password','').strip()
-    role = data.get('role','user')
+    role = "user"
 
     if not username or not email or not password:
         return jsonify({"success":False,"message":"All fields required"}),400
@@ -234,45 +261,47 @@ def predictor():
 @login_required
 def api_predict():
 
-    body = request.get_json() or {}
-
-    symptoms = body.get("symptoms", {})
-    # If patient name is not provided in the form, default to the logged-in username
-    patient_name = (body.get("patient_name") or "").strip()
-    if not patient_name:
-        patient_name = getattr(current_user, "username", "Unknown")
-
-    if not symptoms:
-        return jsonify({"error": "No symptoms provided"}), 400
-
     try:
+
+        body = request.get_json() or {}
+
+        symptoms = body.get("symptoms", {})
+        patient_name = (body.get("patient_name") or "").strip()
+
+        if not patient_name:
+            patient_name = current_user.username
+
+        if not symptoms:
+            return jsonify({"error": "No symptoms provided"}), 400
+
         res = predict_from_input(symptoms)
+
+        report_id = uuid.uuid4().hex[:8].upper()
+
+        db.save_prediction(
+            user_id=current_user.id,
+            report_id=report_id,
+            patient_name=patient_name,
+            predicted_disease=res.get("prediction"),
+            confidence=res.get("confidence", 0.0),
+            symptoms=list(symptoms.keys()),
+            recommended_tests=res.get("recommended_tests", [])
+        )
+
+        res["report_id"] = report_id
+        res["patient_name"] = patient_name
+
+        return jsonify(res)
+
     except Exception as e:
-      import traceback
-      print("PREDICTION ERROR:")
-      print(traceback.format_exc())
-      return jsonify({"error": str(e)}), 500
 
-    user_id = current_user.id
+        import traceback
+        print("FULL PREDICTION ERROR:")
+        print(traceback.format_exc())
 
-    # Short receipt-like ID (matches the style shown in sample report)
-    report_id = uuid.uuid4().hex[:8].upper()
-
-    db.save_prediction(
-        user_id=user_id,
-        report_id=report_id,
-        patient_name=patient_name,
-        predicted_disease=res.get("prediction"),
-        confidence=res.get("confidence", 0.0),
-        symptoms=[k.replace("_", " ").title() for k in (symptoms or {}).keys()],
-        recommended_tests=res.get("recommended_tests", []),
-    )
-
-    res["report_id"] = report_id
-    res["patient_name"] = patient_name
-    res["date"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    return jsonify(res)
+        return jsonify({
+            "error": "Prediction failed on server"
+        }), 500
 
 
 @app.route("/api/report/<report_id>/download", methods=["GET"])

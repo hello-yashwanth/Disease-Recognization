@@ -55,14 +55,7 @@
           <label for="signup-password-confirm" class="form-label">Confirm Password</label>
           <input type="password" class="form-control" id="signup-password-confirm" name="password_confirm" required>
         </div>
-
-        <div class="mb-3">
-          <label for="signup-role" class="form-label">Role</label>
-          <select class="form-control" id="signup-role" name="role" required>
-            <option value="user" selected>User</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
+          <input type="hidden" id="signup-role" name="role" value="user">
         
         <div id="signup-error" class="alert alert-danger" style="display: none;"></div>
         <div id="signup-success" class="alert alert-success" style="display: none;"></div>
