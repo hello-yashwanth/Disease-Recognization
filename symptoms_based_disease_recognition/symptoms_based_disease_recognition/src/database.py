@@ -14,11 +14,12 @@ class Database:
     # Connect to PostgreSQL
     # -------------------------
     def connect(self):
-        try:
-            return psycopg2.connect(self.database_url)
-        except Exception as e:
-            print("Database connection error:", e)
-            return None
+      try:
+        print("DATABASE_URL:", self.database_url)   # debug line
+        return psycopg2.connect(self.database_url)
+      except Exception as e:
+        print("Database connection error:", e)
+        return None
 
     # -------------------------
     # Initialize Database
