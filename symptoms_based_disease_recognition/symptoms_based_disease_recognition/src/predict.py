@@ -4,12 +4,8 @@ import joblib
 import pandas as pd
 import numpy as np
 
-# SHAP optional
-try:
-    import shap
-    SHAP_AVAILABLE = True
-except Exception:
-    SHAP_AVAILABLE = False
+# Disable SHAP to save memory on deployment
+SHAP_AVAILABLE = False
 
 try:
     from .preprocess import load_severity_map
@@ -21,12 +17,19 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 
 # ---------------------------------------------------
-# Medical tests mapping
+# Load model features
 # ---------------------------------------------------
+
 def load_model_features():
     path = os.path.join(BASE_DIR, "models", "feature_importances.csv")
     df = pd.read_csv(path)
     return df["feature"].tolist()
+
+
+# ---------------------------------------------------
+# Medical tests mapping
+# ---------------------------------------------------
+
 def get_medical_tests_for_disease():
 
     return {
@@ -55,12 +58,11 @@ def get_medical_tests_for_disease():
 
 def prepare_input(symptom_presence, severity_map, model_features):
 
-    # Normalize input symptoms
     normalized = {}
+
     for k, v in symptom_presence.items():
         normalized[str(k).lower().strip().replace(" ", "_")] = v
 
-    # Create full feature vector (all features = 0)
     data = {f: 0.0 for f in model_features}
 
     for feature in model_features:
@@ -82,9 +84,9 @@ def prepare_input(symptom_presence, severity_map, model_features):
 
             data[feature] = presence * severity * duration
 
-    # IMPORTANT: enforce correct column order
     X = pd.DataFrame([data])
     X = X[model_features]
+
     return X
 
 
@@ -123,10 +125,8 @@ def predict_from_input(sample_input,
 
     medical_tests_map = get_medical_tests_for_disease()
 
-    # Get feature names
     feature_names = load_model_features()
 
-    # Prepare input
     X = prepare_input(sample_input, severity_map, feature_names)
 
     # Prediction
@@ -138,47 +138,16 @@ def predict_from_input(sample_input,
 
     pred_label = le.inverse_transform([idx])[0]
 
-    # Input symptoms for display
+    # Input symptoms
     input_symptoms = [
         s.replace("_", " ").title() for s in sample_input.keys()
     ]
 
     # ---------------------------------------------------
-    # SHAP Explanation
+    # SHAP Disabled (Render memory safe)
     # ---------------------------------------------------
 
-    shap_features = []
-
-    if SHAP_AVAILABLE:
-        try:
-
-            explainer = shap.TreeExplainer(model)
-
-            shap_vals = explainer.shap_values(X)
-
-            if isinstance(shap_vals, list):
-                shap_vals = shap_vals[idx]
-
-            shap_vals = shap_vals[0]
-
-            feature_map = dict(zip(feature_names, shap_vals))
-
-            top = sorted(
-                feature_map.items(),
-                key=lambda x: abs(x[1]),
-                reverse=True
-            )[:5]
-
-            shap_features = [
-                f.replace("__w", "").replace("_", " ").title()
-                for f, _ in top
-            ]
-
-        except Exception as e:
-            print("SHAP failed:", e)
-
-    if not shap_features:
-        shap_features = input_symptoms[:5]
+    shap_features = input_symptoms[:5]
 
     # ---------------------------------------------------
     # Recommended tests
@@ -195,7 +164,7 @@ def predict_from_input(sample_input,
         "prediction": pred_label,
         "confidence": confidence,
         "top_features_by_model": input_symptoms[:5],
-        "top_features_by_shap": shap_features[:5],
+        "top_features_by_shap": shap_features,
         "recommended_tests": tests[:6],
     }
 
