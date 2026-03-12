@@ -8,12 +8,65 @@ from database import db
 from datetime import datetime
 import json
 import re
-# Load environment variables
+import psycopg2
+
+
+# =============================
+# Load Environment Variables
+# =============================
 
 load_dotenv()
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
+
+
+# =============================
+# Flask App Setup
+# =============================
+
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+template_dir = os.path.join(base_dir, 'templates')
+static_dir = os.path.join(base_dir, 'static')
+
+app = Flask(__name__, static_folder=static_dir, template_folder=template_dir)
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key')
+
+
+# =============================
+# PostgreSQL Connection (Render)
+# =============================
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+conn = psycopg2.connect(DATABASE_URL)
+cursor = conn.cursor()
+
+# Create users table if not exists
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE,
+    email VARCHAR(100),
+    password VARCHAR(255),
+    role VARCHAR(20) DEFAULT 'user'
+);
+""")
+
+# Insert default admin user
+cursor.execute("""
+INSERT INTO users (username,email,password,role)
+VALUES ('yash','admin@test.com','123456789','admin')
+ON CONFLICT (username) DO NOTHING;
+""")
+
+conn.commit()
+
+
+# =============================
+# Import internal modules
+# =============================
+
 try:
     from .predict import predict_from_input
     from .database import db
@@ -25,16 +78,11 @@ except Exception:
     from pdf_utils import generate_prediction_report
     from admin.routes import admin_bp
 
-# Paths
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-template_dir = os.path.join(base_dir, 'templates')
-static_dir = os.path.join(base_dir, 'static')
 
-app = Flask(__name__, static_folder=static_dir, template_folder=template_dir)
-app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key')
+# Initialize database helper
 db.init_db()
 
-# Register admin blueprint (admin panel at /admin)
+# Register admin blueprint
 app.register_blueprint(admin_bp)
 
 
@@ -49,7 +97,6 @@ login_manager.login_view = 'auth'
 
 @login_manager.unauthorized_handler
 def _unauthorized():
-    # For API calls, return JSON instead of redirecting to HTML login page
     if request.path.startswith("/api/"):
         return jsonify({"error": "Login required"}), 401
     return redirect(url_for("auth"))
@@ -79,29 +126,7 @@ def inject_current_year():
 # =============================
 # Page Routes
 # =============================
-@app.route('/contact')
-def contact():
-    return render_template('contact.html')
 
-@app.route('/api/contact', methods=['POST'])
-def api_contact():
-
-    data = request.get_json()
-
-    name = data.get("name")
-    email = data.get("email")
-    message = data.get("message")
-
-    if not name or not email or not message:
-        return jsonify({"success": False, "message": "All fields required"}), 400
-
-    success = db.save_contact_message(name, email, message)
-
-    if success:
-        return jsonify({"success": True})
-    else:
-        return jsonify({"success": False, "message": "Database error"}), 500
-    
 @app.route('/')
 def home():
     return render_template('home.html')
@@ -123,17 +148,9 @@ def about():
     return render_template('about.html')
 
 
-@app.route('/settings')
-@login_required
-def settings():
-    return render_template('settings.html', user=current_user)
-
-
-@app.route('/history')
-@login_required
-def prediction_history():
-    history = db.get_prediction_history(current_user.id)
-    return render_template('history.html', history=history, user=current_user)
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
 
 
 # =============================
@@ -142,6 +159,7 @@ def prediction_history():
 
 @app.route('/api/signup', methods=['POST'])
 def api_signup():
+
     data = request.get_json() or {}
 
     username = data.get('username','').strip()
@@ -152,12 +170,11 @@ def api_signup():
     if not username or not email or not password:
         return jsonify({"success":False,"message":"All fields required"}),400
 
-    # Email format validation
     email_pattern = r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
+
     if not re.match(email_pattern,email):
         return jsonify({"success":False,"message":"Invalid email format"}),400
 
-    # Only allow gmail
     if not email.lower().endswith("@gmail.com"):
         return jsonify({
             "success":False,
@@ -217,139 +234,6 @@ def api_login():
 def logout():
     logout_user()
     return redirect('/')
-
-
-# =============================
-# Prediction System
-# =============================
-
-@app.route('/predictor')
-@login_required
-def predictor():
-
-    symptoms = []
-    diseases = []
-
-    try:
-        ds_path = os.path.join(base_dir, 'dataset', 'dataset.csv')
-
-        if os.path.exists(ds_path):
-            df = pd.read_csv(ds_path)
-
-            symptom_cols = [c for c in df.columns if str(c).lower().startswith('symptom')]
-
-            symptom_set = set()
-
-            for col in symptom_cols:
-                vals = df[col].dropna().astype(str).str.strip()
-                symptom_set.update(vals.unique())
-
-            symptoms = sorted(symptom_set)
-
-    except Exception:
-        pass
-
-    try:
-        diseases = db.get_all_diseases() or []
-    except Exception:
-        diseases = []
-
-    return render_template('predictor.html', symptoms=symptoms, diseases=diseases)
-
-
-@app.route('/api/predict', methods=['POST'])
-@login_required
-def api_predict():
-
-    try:
-
-        body = request.get_json() or {}
-
-        symptoms = body.get("symptoms", {})
-        patient_name = (body.get("patient_name") or "").strip()
-
-        if not patient_name:
-            patient_name = current_user.username
-
-        if not symptoms:
-            return jsonify({"error": "No symptoms provided"}), 400
-
-        res = predict_from_input(symptoms)
-
-        report_id = uuid.uuid4().hex[:8].upper()
-
-        db.save_prediction(
-            user_id=current_user.id,
-            report_id=report_id,
-            patient_name=patient_name,
-            predicted_disease=res.get("prediction"),
-            confidence=res.get("confidence", 0.0),
-            symptoms=list(symptoms.keys()),
-            recommended_tests=res.get("recommended_tests", [])
-        )
-
-        res["report_id"] = report_id
-        res["patient_name"] = patient_name
-
-        return jsonify(res)
-
-    except Exception as e:
-
-        import traceback
-        print("FULL PREDICTION ERROR:")
-        print(traceback.format_exc())
-
-        return jsonify({
-            "error": "Prediction failed on server"
-        }), 500
-
-
-@app.route("/api/report/<report_id>/download", methods=["GET"])
-@login_required
-def download_report(report_id):
-    record = db.get_prediction_by_report_id(report_id, current_user.id)
-    if not record:
-        return jsonify({"error": "Report not found"}), 404
-
-    patient_name = record.get("patient_name") or "Unknown"
-    predicted_disease = record.get("predicted_disease") or "Unknown"
-    prediction_date = record.get("prediction_date")
-    if isinstance(prediction_date, datetime):
-        date_str = prediction_date.strftime("%d/%m/%Y, %H:%M:%S")
-    else:
-        date_str = str(prediction_date) if prediction_date else datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
-
-    tests_raw = record.get("recommended_tests") or ""
-    recommended_tests = [t.strip() for t in tests_raw.split(",") if t.strip()]
-
-    symptoms_raw = record.get("symptoms") or "[]"
-    try:
-        symptoms_list = json.loads(symptoms_raw)
-        if not isinstance(symptoms_list, list):
-            symptoms_list = []
-    except Exception:
-        symptoms_list = []
-
-    pdf = generate_prediction_report(
-        report_id=report_id,
-        date_time=date_str,
-        patient_name=patient_name,
-        symptoms=symptoms_list,
-        predicted_disease=predicted_disease,
-        recommended_tests=recommended_tests,
-    )
-
-    filename = f"report_{report_id}.pdf"
-    out_path = os.path.join(base_dir, "tmp_" + filename)
-    try:
-        pdf.output(out_path)
-        return send_file(out_path, as_attachment=True, download_name=filename, mimetype="application/pdf")
-    finally:
-        try:
-            if os.path.exists(out_path):
-                os.remove(out_path)
-        except Exception:
-            pass
 
 
 # =============================

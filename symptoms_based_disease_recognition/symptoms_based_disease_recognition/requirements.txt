@@ -12,3 +12,4 @@ Flask-Login
 werkzeug
 python-dotenv
 fpdf
+psycopg2-binary
