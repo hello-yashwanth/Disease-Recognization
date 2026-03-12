@@ -4,13 +4,15 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 import uuid
-from database import db
+from src.database import db
 from datetime import datetime
 import json
 import re
 import psycopg2
 
-
+from src.predict import predict_from_input
+from src.predict import predict_from_input
+from src.admin.routes import admin_bp
 # =============================
 # Load Environment Variables
 # =============================
