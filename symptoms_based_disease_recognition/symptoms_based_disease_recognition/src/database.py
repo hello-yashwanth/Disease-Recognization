@@ -1,31 +1,23 @@
 import os
 import json
-import mysql.connector
-from mysql.connector import Error
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class Database:
 
     def __init__(self):
-        self.host = os.environ.get("DB_HOST", "localhost")
-        self.user = os.environ.get("DB_USER", "root")
-        self.password = os.environ.get("DB_PASSWORD", "root")
-        self.database = os.environ.get("DB_NAME", "disease_recognition")
+        self.database_url = os.environ.get("DATABASE_URL")
 
     # -------------------------
-    # Connect to MySQL
+    # Connect to PostgreSQL
     # -------------------------
     def connect(self):
         try:
-            return mysql.connector.connect(
-                host=self.host,
-                user=self.user,
-                password=self.password,
-                database=self.database,
-            )
-        except Error as e:
-            print(f"Error while connecting to MySQL: {e}")
+            return psycopg2.connect(self.database_url)
+        except Exception as e:
+            print("Database connection error:", e)
             return None
 
     # -------------------------
@@ -34,21 +26,16 @@ class Database:
     def init_db(self):
 
         try:
-            connection = mysql.connector.connect(
-                host=self.host,
-                user=self.user,
-                password=self.password,
-            )
+            connection = self.connect()
+            if not connection:
+                return
 
             cursor = connection.cursor()
-
-            cursor.execute(f"CREATE DATABASE IF NOT EXISTS {self.database}")
-            connection.database = self.database
 
             # USERS TABLE
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS users (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    id SERIAL PRIMARY KEY,
                     username VARCHAR(80) UNIQUE NOT NULL,
                     email VARCHAR(120) UNIQUE NOT NULL,
                     password VARCHAR(255) NOT NULL,
@@ -60,7 +47,7 @@ class Database:
             # DISEASE TABLE
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS diseases (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    id SERIAL PRIMARY KEY,
                     name VARCHAR(120) UNIQUE NOT NULL,
                     description TEXT,
                     severity FLOAT NULL,
@@ -72,7 +59,7 @@ class Database:
             # PREDICTION HISTORY
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS prediction_history (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    id SERIAL PRIMARY KEY,
                     report_id VARCHAR(64) NOT NULL,
                     user_id INT NOT NULL,
                     patient_name VARCHAR(120),
@@ -80,7 +67,7 @@ class Database:
                     confidence FLOAT,
                     symptoms TEXT,
                     recommended_tests TEXT,
-                    prediction_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    prediction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (user_id) REFERENCES users(id)
                 )
             """)
@@ -88,7 +75,7 @@ class Database:
             # CONTACT TABLE
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS contact_messages (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    id SERIAL PRIMARY KEY,
                     name VARCHAR(120) NOT NULL,
                     email VARCHAR(120) NOT NULL,
                     message TEXT NOT NULL,
@@ -96,27 +83,14 @@ class Database:
                 )
             """)
 
-            # Migrations
-            for alter in (
-                "ALTER TABLE prediction_history ADD COLUMN confidence FLOAT",
-                "ALTER TABLE prediction_history ADD COLUMN symptoms TEXT",
-                "ALTER TABLE diseases ADD COLUMN severity FLOAT NULL",
-                "ALTER TABLE diseases ADD COLUMN avg_duration_days INT NULL",
-            ):
-                try:
-                    cursor.execute(alter)
-                except Error as e:
-                    if getattr(e, 'errno', None) != 1060:
-                        print(f"Schema migration error: {e}")
-
             connection.commit()
             cursor.close()
             connection.close()
 
             print("Database initialized successfully")
 
-        except Error as e:
-            print(f"Error initializing database: {e}")
+        except Exception as e:
+            print("Database init error:", e)
 
     # -------------------------
     # Contact Form Save
@@ -125,22 +99,17 @@ class Database:
 
         try:
             connection = self.connect()
-
-            if not connection:
-                return False
-
             cursor = connection.cursor()
 
             cursor.execute(
                 """
-                INSERT INTO contact_messages (name, email, message)
-                VALUES (%s, %s, %s)
+                INSERT INTO contact_messages (name,email,message)
+                VALUES (%s,%s,%s)
                 """,
                 (name, email, message),
             )
 
             connection.commit()
-
             cursor.close()
             connection.close()
 
@@ -157,32 +126,30 @@ class Database:
 
         try:
             connection = self.connect()
-
-            if not connection:
-                return {"success": False, "message": "Database connection failed"}
-
             cursor = connection.cursor()
 
             hashed_password = generate_password_hash(password)
 
             cursor.execute(
-                "INSERT INTO users (username, email, password, role) VALUES (%s,%s,%s,%s)",
+                """
+                INSERT INTO users (username,email,password,role)
+                VALUES (%s,%s,%s,%s)
+                """,
                 (username, email, hashed_password, role),
             )
 
             connection.commit()
-
             cursor.close()
             connection.close()
 
             return {"success": True, "message": "User registered successfully"}
 
-        except Error as e:
+        except Exception as e:
 
-            if "Duplicate entry" in str(e):
+            if "duplicate key" in str(e).lower():
                 return {"success": False, "message": "Username or email already exists"}
 
-            return {"success": False, "message": f"Registration failed: {str(e)}"}
+            return {"success": False, "message": str(e)}
 
     # -------------------------
     # Login User
@@ -191,11 +158,7 @@ class Database:
 
         try:
             connection = self.connect()
-
-            if not connection:
-                return {"success": False, "message": "Database connection failed"}
-
-            cursor = connection.cursor(dictionary=True)
+            cursor = connection.cursor(cursor_factory=RealDictCursor)
 
             cursor.execute(
                 "SELECT id,username,email,password,role FROM users WHERE username=%s",
@@ -211,19 +174,13 @@ class Database:
 
                 return {
                     "success": True,
-                    "message": "Login successful",
-                    "user": {
-                        "id": user["id"],
-                        "username": user["username"],
-                        "email": user["email"],
-                        "role": user.get("role", "user"),
-                    },
+                    "user": user
                 }
 
             return {"success": False, "message": "Invalid username or password"}
 
-        except Error as e:
-            return {"success": False, "message": f"Login failed: {str(e)}"}
+        except Exception as e:
+            return {"success": False, "message": str(e)}
 
     # -------------------------
     # Get User by ID
@@ -232,11 +189,7 @@ class Database:
 
         try:
             connection = self.connect()
-
-            if not connection:
-                return None
-
-            cursor = connection.cursor(dictionary=True)
+            cursor = connection.cursor(cursor_factory=RealDictCursor)
 
             cursor.execute(
                 "SELECT id,username,email,role FROM users WHERE id=%s",
@@ -250,72 +203,18 @@ class Database:
 
             return user
 
-        except Error as e:
-            print(f"Error fetching user by ID: {e}")
+        except Exception as e:
+            print("Fetch user error:", e)
             return None
 
     # -------------------------
-    # Prediction Stats
+    # Get Diseases
     # -------------------------
-    def get_prediction_stats(self):
-
-        connection = self.connect()
-
-        cursor = connection.cursor(dictionary=True)
-
-        cursor.execute("""
-            SELECT predicted_disease, COUNT(*) as count
-            FROM prediction_history
-            GROUP BY predicted_disease
-            ORDER BY count DESC
-            LIMIT 5
-        """)
-
-        results = cursor.fetchall()
-
-        cursor.close()
-        connection.close()
-
-        return results
-
-    # -------------------------
-    # Diseases
-    # -------------------------
-    def add_disease(self, name, description, severity=None, avg_duration_days=None):
-
-        try:
-            connection = self.connect()
-
-            if not connection:
-                return False
-
-            cursor = connection.cursor()
-
-            cursor.execute(
-                "INSERT INTO diseases (name,description,severity,avg_duration_days) VALUES (%s,%s,%s,%s)",
-                (name, description, severity, avg_duration_days),
-            )
-
-            connection.commit()
-
-            cursor.close()
-            connection.close()
-
-            return True
-
-        except Exception as e:
-            print(f"Error adding disease: {e}")
-            return False
-
     def get_all_diseases(self):
 
         try:
             connection = self.connect()
-
-            if not connection:
-                return []
-
-            cursor = connection.cursor(dictionary=True)
+            cursor = connection.cursor(cursor_factory=RealDictCursor)
 
             cursor.execute("SELECT * FROM diseases ORDER BY created_at DESC")
 
@@ -327,7 +226,7 @@ class Database:
             return results
 
         except Exception as e:
-            print(f"Error fetching diseases: {e}")
+            print("Disease fetch error:", e)
             return []
 
     # -------------------------
@@ -346,10 +245,6 @@ class Database:
 
         try:
             connection = self.connect()
-
-            if not connection:
-                return False
-
             cursor = connection.cursor()
 
             cursor.execute(
@@ -363,21 +258,20 @@ class Database:
                     user_id,
                     patient_name,
                     predicted_disease,
-                    float(confidence or 0.0),
+                    float(confidence or 0),
                     json.dumps(symptoms or []),
                     ", ".join(recommended_tests or []),
                 ),
             )
 
             connection.commit()
-
             cursor.close()
             connection.close()
 
             return True
 
         except Exception as e:
-            print(f"Error saving prediction: {e}")
+            print("Prediction save error:", e)
             return False
 
 
