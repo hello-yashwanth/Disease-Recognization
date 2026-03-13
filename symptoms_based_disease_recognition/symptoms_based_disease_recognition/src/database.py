@@ -6,6 +6,33 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class Database:
+    def add_disease(self, name, description, severity=None, avg_duration_days=None):
+
+      try:
+
+        conn = self.connect()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            INSERT INTO diseases (name, description, severity, avg_duration_days)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (name, description, severity, avg_duration_days)
+        )
+
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return True
+
+      except Exception as e:
+
+        print("Error adding disease:", e)
+
+        return False
 
     def __init__(self):
         self.database_url = os.environ.get("DATABASE_URL")
