@@ -194,6 +194,50 @@ def api_predict():
         return jsonify({"error": "Prediction failed"}), 500
 
 
+@app.route("/api/report/<report_id>/download", methods=["GET"])
+@login_required
+def download_report(report_id):
+
+    record = db.get_prediction_by_report_id(report_id, current_user.id)
+
+    if not record:
+        return jsonify({"error": "Report not found"}), 404
+
+    patient_name = record.get("patient_name") or "Unknown"
+    predicted_disease = record.get("predicted_disease") or "Unknown"
+    prediction_date = record.get("prediction_date")
+
+    if isinstance(prediction_date, datetime):
+        date_str = prediction_date.strftime("%d/%m/%Y %H:%M:%S")
+    else:
+        date_str = str(prediction_date)
+
+    tests_raw = record.get("recommended_tests") or ""
+    recommended_tests = [t.strip() for t in tests_raw.split(",") if t.strip()]
+
+    symptoms_raw = record.get("symptoms") or "[]"
+
+    try:
+        symptoms_list = json.loads(symptoms_raw)
+    except:
+        symptoms_list = []
+
+    pdf = generate_prediction_report(
+        report_id=report_id,
+        date_time=date_str,
+        patient_name=patient_name,
+        symptoms=symptoms_list,
+        predicted_disease=predicted_disease,
+        recommended_tests=recommended_tests
+    )
+
+    filename = f"report_{report_id}.pdf"
+    path = os.path.join(BASE_DIR, filename)
+
+    pdf.output(path)
+
+    return send_file(path, as_attachment=True)
+
 # =============================
 # Contact API
 # =============================

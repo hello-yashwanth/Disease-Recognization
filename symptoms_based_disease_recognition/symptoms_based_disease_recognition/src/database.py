@@ -256,7 +256,24 @@ class Database:
         except Exception as e:
             print("Disease fetch error:", e)
             return []
+        
+        
+    def get_prediction_by_report_id(self, report_id, user_id):
 
+     conn = self.connect()
+     cursor = conn.cursor(dictionary=True)
+
+     cursor.execute(
+        "SELECT * FROM prediction_history WHERE report_id=%s AND user_id=%s",
+        (report_id, user_id)
+     )
+
+     result = cursor.fetchone()
+
+     cursor.close()
+     conn.close()
+
+     return result
     # -------------------------
     # Save Prediction
     # -------------------------
