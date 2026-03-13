@@ -115,7 +115,21 @@ def contact():
 # =============================
 # Predictor Page
 # =============================
+@app.route('/history')
+@login_required
+def prediction_history():
 
+    history = db.get_prediction_history(current_user.id)
+
+    return render_template(
+        "history.html",
+        history=history,
+        user=current_user
+    )
+@app.route('/settings')
+@login_required
+def settings():
+    return render_template("settings.html", user=current_user)
 @app.route("/predictor")
 @login_required
 def predictor():

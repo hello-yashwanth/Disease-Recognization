@@ -261,14 +261,21 @@ class Database:
     def get_prediction_by_report_id(self, report_id, user_id):
 
      conn = self.connect()
-     cursor = conn.cursor(dictionary=True)
+     cursor = conn.cursor()
 
      cursor.execute(
         "SELECT * FROM prediction_history WHERE report_id=%s AND user_id=%s",
         (report_id, user_id)
      )
 
-     result = cursor.fetchone()
+     row = cursor.fetchone()
+
+     if not row:
+        return None
+
+     columns = [desc[0] for desc in cursor.description]
+
+     result = dict(zip(columns, row))
 
      cursor.close()
      conn.close()
