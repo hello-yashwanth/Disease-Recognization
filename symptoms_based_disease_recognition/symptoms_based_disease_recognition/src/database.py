@@ -258,29 +258,46 @@ class Database:
             return []
         
         
-    def get_prediction_by_report_id(self, report_id, user_id):
+    def get_prediction_history(self, user_id):
 
-     conn = self.connect()
-     cursor = conn.cursor()
+     try:
 
-     cursor.execute(
-        "SELECT * FROM prediction_history WHERE report_id=%s AND user_id=%s",
-        (report_id, user_id)
-     )
+        conn = self.connect()
+        cursor = conn.cursor()
 
-     row = cursor.fetchone()
+        cursor.execute(
+            """
+            SELECT report_id,
+                   patient_name,
+                   predicted_disease,
+                   confidence,
+                   prediction_date
+            FROM prediction_history
+            WHERE user_id=%s
+            ORDER BY prediction_date DESC
+            """,
+            (user_id,)
+        )
 
-     if not row:
-        return None
+        rows = cursor.fetchall()
 
-     columns = [desc[0] for desc in cursor.description]
+        columns = [desc[0] for desc in cursor.description]
 
-     result = dict(zip(columns, row))
+        history = []
 
-     cursor.close()
-     conn.close()
+        for row in rows:
+            history.append(dict(zip(columns, row)))
 
-     return result
+        cursor.close()
+        conn.close()
+
+        return history
+
+     except Exception as e:
+
+        print("History fetch error:", e)
+
+        return []
     # -------------------------
     # Save Prediction
     # -------------------------
