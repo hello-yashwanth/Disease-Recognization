@@ -238,6 +238,42 @@ class Database:
     # -------------------------
     # Get Diseases
     # -------------------------
+    def get_prediction_by_report_id(self, report_id, user_id):
+
+     try:
+        conn = self.connect()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT report_id,
+                   patient_name,
+                   predicted_disease,
+                   confidence,
+                   prediction_date
+            FROM prediction_history
+            WHERE report_id=%s AND user_id=%s
+            """,
+            (report_id, user_id)
+        )
+
+        row = cursor.fetchone()
+
+        if not row:
+            return None
+
+        columns = [desc[0] for desc in cursor.description]
+
+        record = dict(zip(columns, row))
+
+        cursor.close()
+        conn.close()
+
+        return record
+
+     except Exception as e:
+        print("Report fetch error:", e)
+        return None
     def get_all_diseases(self):
 
         try:
