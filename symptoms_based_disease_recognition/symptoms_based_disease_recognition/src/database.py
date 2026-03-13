@@ -260,7 +260,7 @@ class Database:
         
     def get_prediction_history(self, user_id):
 
-     try:
+      try:
 
         conn = self.connect()
         cursor = conn.cursor()
@@ -293,9 +293,9 @@ class Database:
 
         return history
 
-     except Exception as e:
+      except Exception as e:
 
-        print("History fetch error:", e)
+        print("Prediction history error:", e)
 
         return []
     # -------------------------
