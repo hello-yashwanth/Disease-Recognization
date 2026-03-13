@@ -4,10 +4,10 @@
 
 async function postPredict(payload) {
   try {
-    const res = await fetch('/api/predict', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    const res = await fetch("/api/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
@@ -17,13 +17,11 @@ async function postPredict(payload) {
     }
 
     return await res.json();
-
   } catch (error) {
     console.error("Prediction request failed:", error);
     throw error;
   }
 }
-
 
 /* =========================================
    DOM READY
@@ -31,97 +29,141 @@ async function postPredict(payload) {
 
 document.addEventListener("DOMContentLoaded", () => {
 
+  /* ==============================
+     PREDICTOR PAGE
+  ============================== */
+
   const form = document.getElementById("symptom-form");
 
-  // Stop script if not predictor page
-  if (!form) {
-    console.log("Predictor page not detected");
-    return;
+  if (form) {
+
+    const addBtn = document.getElementById("add-symptom");
+
+    if (addBtn) {
+      addBtn.addEventListener("click", () => addRow());
+    }
+
+    document.addEventListener("click", (e) => {
+      if (e.target.classList.contains("remove") || e.target.closest(".remove")) {
+
+        const row = e.target.closest(".symptom-row");
+        if (!row) return;
+
+        row.style.transition = "all 0.3s ease";
+        row.style.opacity = "0";
+        row.style.transform = "translateX(-20px)";
+
+        setTimeout(() => row.remove(), 300);
+      }
+    });
+
+    form.addEventListener("submit", async (e) => {
+
+      e.preventDefault();
+
+      const symptoms = gatherInput();
+
+      if (Object.keys(symptoms).length === 0) {
+        alert("Please enter at least one symptom");
+        return;
+      }
+
+      const patientName =
+        document.getElementById("patient-name")?.value || "";
+
+      try {
+
+        showLoading();
+
+        const res = await postPredict({
+          symptoms: symptoms,
+          patient_name: patientName
+        });
+
+        hideLoading();
+
+        displayResults(res);
+
+      } catch (err) {
+
+        hideLoading();
+
+        console.error(err);
+
+        const msg = String(err?.message || "").toLowerCase();
+
+        if (
+          msg.includes("login") ||
+          msg.includes("unauthorized") ||
+          msg.includes("401")
+        ) {
+          alert("Please login first.");
+          window.location.href = "/auth";
+        } else {
+          alert("Prediction failed");
+        }
+
+      }
+
+    });
+
   }
 
   /* ==============================
-     ADD SYMPTOM ROW
+     CONTACT PAGE
   ============================== */
 
-  document.getElementById("add-symptom").addEventListener("click", () => {
-    addRow();
-  });
+  const contactForm = document.getElementById("contactForm");
 
-  /* ==============================
-     REMOVE ROW
-  ============================== */
+  if (contactForm) {
 
-  document.addEventListener("click", (e) => {
+    contactForm.addEventListener("submit", async function (e) {
 
-    if (e.target.classList.contains("remove") || e.target.closest(".remove")) {
+      e.preventDefault();
 
-      const row = e.target.closest(".symptom-row");
+      const name = document.getElementById("contact-name")?.value || "";
+      const email = document.getElementById("contact-email")?.value || "";
+      const message = document.getElementById("contact-message")?.value || "";
 
-      if (!row) return;
+      try {
 
-      row.style.transition = "all 0.3s ease";
-      row.style.opacity = "0";
-      row.style.transform = "translateX(-20px)";
+        const res = await fetch("/api/contact", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            message
+          })
+        });
 
-      setTimeout(() => row.remove(), 300);
-    }
+        const data = await res.json();
 
-  });
+        if (data.success) {
 
+          alert("Message Submitted Successfully!");
 
-  /* ==============================
-     FORM SUBMIT
-  ============================== */
+          contactForm.reset();
 
-  form.addEventListener("submit", async (e) => {
+        } else {
 
-    e.preventDefault();
+          alert(data.message || "Submission Failed");
 
-    const symptoms = gatherInput();
+        }
 
-    if (Object.keys(symptoms).length === 0) {
-      alert("Please enter at least one symptom");
-      return;
-    }
+      } catch (err) {
 
-    const patientName =
-      document.getElementById("patient-name")?.value || "";
+        console.error(err);
 
-    try {
+        alert("Server error while sending message");
 
-      showLoading();
-
-      const res = await postPredict({
-        symptoms: symptoms,
-        patient_name: patientName
-      });
-
-      hideLoading();
-
-      displayResults(res);
-
-    } catch (err) {
-
-      hideLoading();
-
-      console.error(err);
-
-      const msg = String(err?.message || "").toLowerCase();
-
-      if (
-        msg.includes("login") ||
-        msg.includes("unauthorized") ||
-        msg.includes("401")
-      ) {
-        alert("Please login first.");
-        window.location.href = "/auth";
-      } else {
-        alert("Prediction failed");
       }
 
-    }
+    });
 
-  });
+  }
 
 });
 
@@ -133,6 +175,8 @@ document.addEventListener("DOMContentLoaded", () => {
 function addRow() {
 
   const container = document.getElementById("symptom-list");
+
+  if (!container) return;
 
   const div = document.createElement("div");
 
@@ -198,9 +242,9 @@ function gatherInput() {
 
     used.add(s);
 
-    const sev = row.querySelector("input[name=severity]").value;
+    const sev = row.querySelector("input[name=severity]")?.value;
 
-    const dur = row.querySelector("input[name=duration]").value;
+    const dur = row.querySelector("input[name=duration]")?.value;
 
     if (sev || dur) {
 
@@ -231,6 +275,8 @@ function showLoading() {
 
   const btn = document.getElementById("submit");
 
+  if (!btn) return;
+
   btn.disabled = true;
 
   btn.innerHTML =
@@ -242,6 +288,8 @@ function showLoading() {
 function hideLoading() {
 
   const btn = document.getElementById("submit");
+
+  if (!btn) return;
 
   btn.disabled = false;
 
@@ -259,25 +307,24 @@ function displayResults(res) {
 
   const result = document.getElementById("result");
 
-  result.classList.remove("d-none");
+  if (!result) return;
 
-  /* Prediction */
+  result.classList.remove("d-none");
 
   const prediction = document.getElementById("prediction");
 
   const confidence = Math.round((res.confidence || 0) * 100);
 
-  prediction.innerHTML = `
-    <strong>${res.prediction}</strong>
-    <span style="margin-left:10px">(${confidence}%)</span>
-  `;
-
-
-  /* Download button */
+  if (prediction) {
+    prediction.innerHTML = `
+      <strong>${res.prediction}</strong>
+      <span style="margin-left:10px">(${confidence}%)</span>
+    `;
+  }
 
   const dl = document.getElementById("download-report");
 
-  if (res.report_id) {
+  if (dl && res.report_id) {
 
     dl.href = `/api/report/${res.report_id}/download`;
 
@@ -285,82 +332,48 @@ function displayResults(res) {
 
   }
 
-
-  /* Top features */
-
   const tf = document.getElementById("top-features");
 
-  tf.innerHTML = "";
+  if (tf) {
 
-  const features = res.top_features_by_shap || [];
+    tf.innerHTML = "";
 
-  features.forEach(f => {
+    const features = res.top_features_by_shap || [];
 
-    const li = document.createElement("li");
+    features.forEach(f => {
 
-    li.textContent = f;
+      const li = document.createElement("li");
 
-    tf.appendChild(li);
+      li.textContent = f;
 
-  });
+      tf.appendChild(li);
 
+    });
 
-  /* Recommended tests */
+  }
 
   const tt = document.getElementById("tests");
 
-  tt.innerHTML = "";
+  if (tt) {
 
-  const tests = res.recommended_tests || [];
+    tt.innerHTML = "";
 
-  tests.forEach(t => {
+    const tests = res.recommended_tests || [];
 
-    const li = document.createElement("li");
+    tests.forEach(t => {
 
-    li.textContent = t;
+      const li = document.createElement("li");
 
-    tt.appendChild(li);
+      li.textContent = t;
 
-  });
+      tt.appendChild(li);
 
+    });
+
+  }
 
   result.scrollIntoView({
     behavior: "smooth"
   });
 
 }
-document.getElementById("contactForm").addEventListener("submit",async function(e){
-
-e.preventDefault()
-
-const name=document.getElementById("contact-name").value
-const email=document.getElementById("contact-email").value
-const message=document.getElementById("contact-message").value
-
-const res=await fetch("/api/contact",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-name,
-email,
-message
-})
-})
-
-const data=await res.json()
-
-if(data.success){
-
-alert("Message Submitted Successfully!")
-
-document.getElementById("contactForm").reset()
-
-}else{
-
-alert("Submission Failed")
-
-}
-
-})
